@@ -1,0 +1,38 @@
+name: 每日自动选股-V3大师版
+on:
+  workflow_dispatch: # 支持手动点击运行
+  schedule:
+    - cron: '0 8 * * *' # 定时，UTC时间，对应国内下午
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas
+
+      - name: Run stock screener
+        run: python stock_screener.py
+
+      - name: Build site
+        run: python build_site.py
+
+      - name: Commit & Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto update stock data" || echo "No changes to commit"
+          git push
